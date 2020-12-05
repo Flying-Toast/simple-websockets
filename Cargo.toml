@@ -6,6 +6,6 @@ edition = "2018"
 
 [dependencies]
 tokio-tungstenite = "0.11"
-tokio = "0.2"
+tokio = "0.3"
 futures-util = "0.3"
 flume = "0.9"
