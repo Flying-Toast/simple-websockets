@@ -88,7 +88,7 @@ fn start_runtime(event_tx: flume::Sender<Event>, port: u16) -> Result<(), Error>
         .map_err(|_| Error::FailedToStart)?
         .block_on(async {
             let address = format!("0.0.0.0:{}", port);
-            let mut listener = TcpListener::bind(&address).await
+            let listener = TcpListener::bind(&address).await
                 .map_err(|_| Error::FailedToStart)?;
 
             let mut current_id: u32 = 0;
