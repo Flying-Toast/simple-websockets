@@ -71,7 +71,28 @@ pub enum Event {
     Message(ClientID, Message),
 }
 
-pub fn launch(port: u16) -> Result<flume::Receiver<Event>, Error> {
+#[derive(Debug)]
+pub struct EventHub {
+    rx: flume::Receiver<Event>,
+}
+
+impl EventHub {
+    fn new(rx: flume::Receiver<Event>) -> Self {
+        Self {
+            rx,
+        }
+    }
+
+    pub fn drain(&mut self) -> Vec<Event> {
+        if self.rx.is_disconnected() && self.rx.is_empty() {
+            panic!("EventHub channel disconnected");
+        }
+
+        self.rx.drain().collect()
+    }
+}
+
+pub fn launch(port: u16) -> Result<EventHub, Error> {
     let (tx, rx) = flume::unbounded();
 
     std::thread::Builder::new()
@@ -80,7 +101,7 @@ pub fn launch(port: u16) -> Result<flume::Receiver<Event>, Error> {
             start_runtime(tx, port).unwrap();
         }).map_err(|_| Error::FailedToStart)?;
 
-    Ok(rx)
+    Ok(EventHub::new(rx))
 }
 
 fn start_runtime(event_tx: flume::Sender<Event>, port: u16) -> Result<(), Error> {
