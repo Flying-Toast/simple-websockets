@@ -5,7 +5,7 @@ authors = ["Flying-Toast"]
 edition = "2018"
 
 [dependencies]
-tokio-tungstenite = "0.12"
+tokio-tungstenite = "0.13"
 tokio = { version = "0.3", features = ["full"] }
 futures-util = "0.3"
 flume = "0.9"
