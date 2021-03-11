@@ -7,7 +7,7 @@ license = "MIT"
 description = "Fast and efficient WebSocket server with an easy API"
 homepage = "https://github.com/Flying-Toast/simple-websockets"
 repository = "https://github.com/Flying-Toast/simple-websockets"
-keywords = ["websocket", "web", "async", "server"]
+keywords = ["websocket", "web", "async", "server", "network"]
 categories = ["web-programming::websocket", "web-programming", "network-programming", "concurrency", "asynchronous"]
 
 [dependencies]
