@@ -1,3 +1,52 @@
+//! A very simple API over an async WebSocket implementation
+//! using [tokio](https://tokio.rs).
+//!
+//! To launch the WebSocket listener, simply call [`launch()`], and use the
+//! returned [`EventHub`] to react to client messages, connections, and disconnections.
+//!
+//! # Example
+//!
+//! A WebSocket echo server:
+//!
+//! ```no_run
+//! use simple_websockets::{Event, Responder};
+//! use std::collections::HashMap;
+//!
+//! fn main() {
+//!     // listen for WebSockets on port 8080:
+//!     let event_hub = simple_websockets::launch(8080)
+//!         .expect("failed to listen on port 8080");
+//!     // map between client ids and the client's `Responder`:
+//!     let mut clients: HashMap<u64, Responder> = HashMap::new();
+//!
+//!     loop {
+//!         let event = match event_hub.next_event() {
+//!             Some(e) => e,
+//!             None => continue,
+//!         };
+//!
+//!         match event {
+//!             Event::Connect(client_id, responder) => {
+//!                 println!("A client connected with id #{}", client_id);
+//!                 // add their Responder to our `clients` map:
+//!                 clients.insert(client_id, responder);
+//!             },
+//!             Event::Disconnect(client_id) => {
+//!                 println!("Client #{} disconnected.", client_id);
+//!                 // remove the disconnected client from the clients map:
+//!                 clients.remove(&client_id);
+//!             },
+//!             Event::Message(client_id, message) => {
+//!                 println!("Received a message from client #{}: {:?}", client_id, message);
+//!                 // retrieve this client's `Responder`:
+//!                 let responder = clients.get(&client_id).unwrap();
+//!                 // echo the message back:
+//!                 responder.send(message);
+//!             },
+//!         }
+//!     }
+//! }
+//! ```
 use tokio::runtime::Runtime;
 use tokio::net::{TcpListener, TcpStream};
 use tokio_tungstenite::{tungstenite, accept_async};
@@ -120,12 +169,17 @@ impl EventHub {
     }
 
     /// Clears the event queue and returns all the events that were in the queue.
-    pub fn drain(&mut self) -> Vec<Event> {
+    pub fn drain(&self) -> Vec<Event> {
         if self.rx.is_disconnected() && self.rx.is_empty() {
             panic!("EventHub channel disconnected. Panicking because Websocket listener thread was killed.");
         }
 
         self.rx.drain().collect()
+    }
+
+    /// Returns the next event, or None if the queue is empty.
+    pub fn next_event(&self) -> Option<Event> {
+        self.rx.try_recv().ok()
     }
 
     /// Returns true if there are currently no events in the queue.
@@ -134,7 +188,7 @@ impl EventHub {
     }
 }
 
-/// Start listening for websocket connections.
+/// Start listening for websocket connections on `port`.
 /// On success, returns an [`EventHub`] for receiving messages and
 /// connection/disconnection notifications.
 pub fn launch(port: u16) -> Result<EventHub, Error> {
