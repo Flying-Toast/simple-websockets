@@ -3,6 +3,12 @@ name = "simple-websockets"
 version = "0.1.0"
 authors = ["Flying-Toast"]
 edition = "2018"
+license = "MIT"
+description = "Fast and efficient WebSocket server with an easy API"
+homepage = "https://github.com/Flying-Toast/simple-websockets"
+repository = "https://github.com/Flying-Toast/simple-websockets"
+keywords = ["websocket", "web", "async", "server"]
+categories = ["web-programming::websocket", "web-programming", "network-programming", "concurrency", "asynchronous"]
 
 [dependencies]
 tokio-tungstenite = "0.14"
