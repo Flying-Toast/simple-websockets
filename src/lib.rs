@@ -93,6 +93,10 @@ enum ResponderCommand {
 ///
 /// `Responder`s can be safely cloned and sent across threads, to be used in a
 /// multi-producer single-consumer paradigm.
+///
+/// If a Reponder is dropped while its client is still connected, the connection
+/// will be automatically closed. If there are multiple clones of a Responder,
+/// The client will not be disconnected until the last Responder is dropped.
 #[derive(Debug, Clone)]
 pub struct Responder {
     tx: flume::Sender<ResponderCommand>,
