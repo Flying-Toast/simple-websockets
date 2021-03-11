@@ -1,7 +1,6 @@
-//! A very simple API over an async WebSocket implementation
-//! using [tokio](https://tokio.rs).
+//! An easy-to-use async WebSocket server using [tokio](https://tokio.rs).
 //!
-//! To launch the WebSocket listener, simply call [`launch()`], and use the
+//! To start a WebSocket listener, simply call [`launch()`], and use the
 //! returned [`EventHub`] to react to client messages, connections, and disconnections.
 //!
 //! # Example
