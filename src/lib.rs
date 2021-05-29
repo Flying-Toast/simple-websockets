@@ -185,6 +185,11 @@ impl EventHub {
         self.rx.try_recv().ok()
     }
 
+    /// Returns the next event, blocking if the queue is empty.
+    pub fn poll_event(&self) -> Event {
+        self.rx.recv().unwrap()
+    }
+
     /// Returns true if there are currently no events in the queue.
     pub fn is_empty(&self) -> bool {
         self.rx.is_empty()
