@@ -2,7 +2,7 @@
 name = "simple-websockets"
 version = "0.1.1"
 authors = ["Flying-Toast"]
-edition = "2018"
+edition = "2021"
 license = "MIT"
 description = "Fast and efficient WebSocket server with an easy API"
 homepage = "https://github.com/Flying-Toast/simple-websockets"
