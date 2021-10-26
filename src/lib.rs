@@ -1,4 +1,4 @@
-//! An easy-to-use async WebSocket server using [tokio](https://tokio.rs).
+//! An easy-to-use WebSocket server.
 //!
 //! To start a WebSocket listener, simply call [`launch()`], and use the
 //! returned [`EventHub`] to react to client messages, connections, and disconnections.
@@ -140,19 +140,26 @@ impl Responder {
 #[derive(Debug)]
 pub enum Event {
     /// A new client has connected.
-    ///
-    /// The first field is a `u64`, which is a unique id of the connected client.
-    /// The second field is a [`Responder`] which is used to send messages to this client.
-    Connect(u64, Responder),
+    Connect(
+        /// id of the client who connected
+        u64,
+        /// [`Responder`] used to send messages back to this client
+        Responder,
+    ),
+
     /// A client has disconnected.
-    ///
-    /// The `u64` field is the id of the client that disconnected.
-    Disconnect(u64),
+    Disconnect(
+        /// id of the client who disconnected
+        u64,
+    ),
+
     /// An incoming message from a client.
-    ///
-    /// The `u64` field is the id of the client who sent this message.
-    /// The second field is the actual [`Message`].
-    Message(u64, Message),
+    Message(
+        /// id of the client who sent the message
+        u64,
+        /// the message
+        Message,
+    ),
 }
 
 /// A queue of incoming events from clients.
@@ -188,6 +195,12 @@ impl EventHub {
     /// Returns the next event, blocking if the queue is empty.
     pub fn poll_event(&self) -> Event {
         self.rx.recv().unwrap()
+    }
+
+    /// Async version of [`poll_event`](Self::poll_event)
+    pub async fn poll_async(&self) -> Event {
+        self.rx.recv_async().await
+            .expect("Parent thread is dead")
     }
 
     /// Returns true if there are currently no events in the queue.

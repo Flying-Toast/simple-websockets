@@ -1,6 +1,6 @@
 # simple-websockets
 
-An easy-to-use async WebSocket server using [tokio](https://tokio.rs).
+An easy-to-use WebSocket server.
 
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Docs](https://docs.rs/simple-websockets/badge.svg)](https://docs.rs/simple-websockets)
