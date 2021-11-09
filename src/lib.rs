@@ -19,12 +19,7 @@
 //!     let mut clients: HashMap<u64, Responder> = HashMap::new();
 //!
 //!     loop {
-//!         let event = match event_hub.next_event() {
-//!             Some(e) => e,
-//!             None => continue,
-//!         };
-//!
-//!         match event {
+//!         match event_hub.poll_event() {
 //!             Event::Connect(client_id, responder) => {
 //!                 println!("A client connected with id #{}", client_id);
 //!                 // add their Responder to our `clients` map:
