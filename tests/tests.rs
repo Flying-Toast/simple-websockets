@@ -10,37 +10,37 @@ mod tests {
         const UNIQUE_TEST_PORT: u16 = 9000; // Future fix will eliminate this need
         let server_endpoint = Url::parse(format!("ws://127.0.0.1:{UNIQUE_TEST_PORT}").as_str()).unwrap();
         let websocket_event_hub = simple_websockets::launch(UNIQUE_TEST_PORT).expect(format!("failed to listen on websocket port {UNIQUE_TEST_PORT}").as_str());
-        assert_eq!(true, websocket_event_hub.is_empty());
+        assert!(websocket_event_hub.is_empty());
         
         // Connect and disconnect some clients and assert on server events
         let (mut client_0, _response_0) = tungstenite::connect(&server_endpoint).expect("Can't connect");
         std::thread::sleep(std::time::Duration::from_millis(500)); // Ensure event is actually triggered. The longer the wait, the slower test. The short the wait the higher risk of getting an unstable test. Optimal solution would be for 
         assert_connect_event(websocket_event_hub.poll_event(), 0);
-        assert_eq!(true, websocket_event_hub.is_empty());
+        assert!(websocket_event_hub.is_empty());
 
         let (mut client_1, _response_1) = tungstenite::connect(&server_endpoint).expect("Can't connect");
         let (mut _client_2, _response_2) = tungstenite::connect(&server_endpoint).expect("Can't connect");
 
         std::thread::sleep(std::time::Duration::from_millis(500));
-        assert_eq!(false, websocket_event_hub.is_empty());
+        assert!(!websocket_event_hub.is_empty());
         assert_connect_event(websocket_event_hub.poll_event(), 1);
-        assert_eq!(false, websocket_event_hub.is_empty());
+        assert!(!websocket_event_hub.is_empty());
         assert_connect_event(websocket_event_hub.poll_event(), 2); 
-        assert_eq!(true, websocket_event_hub.is_empty());
+        assert!(websocket_event_hub.is_empty());
 
         client_1.close(None).expect("Expected no panic from close call");
         std::thread::sleep(std::time::Duration::from_millis(500));
-        assert_eq!(false, websocket_event_hub.is_empty());
+        assert!(!websocket_event_hub.is_empty());
 
         assert_disconnect_event(websocket_event_hub.poll_event(), 1);
-        assert_eq!(true, websocket_event_hub.is_empty());
+        assert!(websocket_event_hub.is_empty());
 
         client_0.close(None).expect("Expected no panic from close call");
         std::thread::sleep(std::time::Duration::from_millis(500));
-        assert_eq!(false, websocket_event_hub.is_empty());
+        assert!(!websocket_event_hub.is_empty());
 
         assert_disconnect_event(websocket_event_hub.poll_event(), 0);
-        assert_eq!(true, websocket_event_hub.is_empty());
+        assert!(websocket_event_hub.is_empty());
     }
 
     #[test]
@@ -49,7 +49,7 @@ mod tests {
         const UNIQUE_TEST_PORT: u16 = 9001; // Future fix will eliminate this need
         let server_endpoint = Url::parse(format!("ws://127.0.0.1:{UNIQUE_TEST_PORT}").as_str()).unwrap();
         let websocket_event_hub = simple_websockets::launch(UNIQUE_TEST_PORT).expect(format!("failed to listen on websocket port {UNIQUE_TEST_PORT}").as_str());
-        assert_eq!(true, websocket_event_hub.is_empty());
+        assert!(websocket_event_hub.is_empty());
 
         // Connect some clients and send from the middle one to ensure no bug exists that always returns first or last client id for a received message
         let (_client_0, _) = tungstenite::connect(&server_endpoint).expect("Can't connect");
@@ -59,17 +59,17 @@ mod tests {
         assert_connect_event(websocket_event_hub.poll_event(), 0);
         assert_connect_event(websocket_event_hub.poll_event(), 1);
         assert_connect_event(websocket_event_hub.poll_event(), 2);
-        assert_eq!(true, websocket_event_hub.is_empty());
+        assert!(websocket_event_hub.is_empty());
         
         client_1.write_message(tungstenite::Message::Text(String::from("Hello from client 1!"))).expect("Error sending text message");
         assert_text_message_event(websocket_event_hub.poll_event(), 1, "Hello from client 1!");
-        assert_eq!(true, websocket_event_hub.is_empty());
+        assert!(websocket_event_hub.is_empty());
 
         client_1.write_message(tungstenite::Message::Text(String::from("Hello from client 1 again!"))).expect("Error sending text message");
         client_2.write_message(tungstenite::Message::Text(String::from("Hello from client 2!"))).expect("Error sending text message");
         assert_text_message_event(websocket_event_hub.poll_event(), 1, "Hello from client 1 again!");
         assert_text_message_event(websocket_event_hub.poll_event(), 2, "Hello from client 2!");
-        assert_eq!(true, websocket_event_hub.is_empty());
+        assert!(websocket_event_hub.is_empty());
     }
 
     #[test]
@@ -78,7 +78,7 @@ mod tests {
         const UNIQUE_TEST_PORT: u16 = 9002; // Future fix will eliminate this need
         let server_endpoint = Url::parse(format!("ws://127.0.0.1:{UNIQUE_TEST_PORT}").as_str()).unwrap();
         let websocket_event_hub = simple_websockets::launch(UNIQUE_TEST_PORT).expect(format!("failed to listen on websocket port {UNIQUE_TEST_PORT}").as_str());
-        assert_eq!(true, websocket_event_hub.is_empty());
+        assert!(websocket_event_hub.is_empty());
 
         // Connect some clients and send from the middle one to ensure no bug exists that always returns first or last client id for a received message
         let (_client_0, _) = tungstenite::connect(&server_endpoint).expect("Can't connect");
@@ -88,17 +88,17 @@ mod tests {
         assert_connect_event(websocket_event_hub.poll_event(), 0);
         assert_connect_event(websocket_event_hub.poll_event(), 1);
         assert_connect_event(websocket_event_hub.poll_event(), 2);
-        assert_eq!(true, websocket_event_hub.is_empty());
+        assert!(websocket_event_hub.is_empty());
         
         client_1.write_message(tungstenite::Message::Binary(vec![1, 2, 3])).expect("Error sending text message");
         assert_binary_message_event(websocket_event_hub.poll_event(), 1, vec![1, 2, 3]);
-        assert_eq!(true, websocket_event_hub.is_empty());
+        assert!(websocket_event_hub.is_empty());
 
         client_1.write_message(tungstenite::Message::Binary(vec![])).expect("Error sending text message");
         client_2.write_message(tungstenite::Message::Binary(vec![4, 5, 6])).expect("Error sending text message");
         assert_binary_message_event(websocket_event_hub.poll_event(), 1, vec![]);
         assert_binary_message_event(websocket_event_hub.poll_event(), 2, vec![4,5,6]);
-        assert_eq!(true, websocket_event_hub.is_empty());
+        assert!(websocket_event_hub.is_empty());
     }
 
     
@@ -108,7 +108,7 @@ mod tests {
         const UNIQUE_TEST_PORT: u16 = 9003; // Future fix will eliminate this need
         let server_endpoint = Url::parse(format!("ws://127.0.0.1:{UNIQUE_TEST_PORT}").as_str()).unwrap();
         let websocket_event_hub = simple_websockets::launch(UNIQUE_TEST_PORT).expect(format!("failed to listen on websocket port {UNIQUE_TEST_PORT}").as_str());
-        assert_eq!(true, websocket_event_hub.is_empty());
+        assert!(websocket_event_hub.is_empty());
 
         // Connect some clients and send from the middle one to ensure no bug exists that always returns first or last client id for a received message
         let (_c0, _r0) = tungstenite::connect(&server_endpoint).expect("Can't connect");
@@ -118,7 +118,7 @@ mod tests {
         assert_connect_event(websocket_event_hub.poll_event(), 0);
         let (_, responder_1) = assert_connect_event(websocket_event_hub.poll_event(), 1);
         let (_, responder_2) = assert_connect_event(websocket_event_hub.poll_event(), 2);
-        assert_eq!(true, websocket_event_hub.is_empty());
+        assert!(websocket_event_hub.is_empty());
         
         responder_1.send(simple_websockets::Message::Text("Hello client 1!".to_string()));
         responder_2.send(simple_websockets::Message::Text("Hello client 2!".to_string()));
@@ -140,7 +140,7 @@ mod tests {
         const UNIQUE_TEST_PORT: u16 = 9004; // Future fix will eliminate this need
         let server_endpoint = Url::parse(format!("ws://127.0.0.1:{UNIQUE_TEST_PORT}").as_str()).unwrap();
         let websocket_event_hub = simple_websockets::launch(UNIQUE_TEST_PORT).expect(format!("failed to listen on websocket port {UNIQUE_TEST_PORT}").as_str());
-        assert_eq!(true, websocket_event_hub.is_empty());
+        assert!(websocket_event_hub.is_empty());
 
         // Connect some clients and send from the middle one to ensure no bug exists that always returns first or last client id for a received message
         let (_c0, _r0) = tungstenite::connect(&server_endpoint).expect("Can't connect");
@@ -150,7 +150,7 @@ mod tests {
         assert_connect_event(websocket_event_hub.poll_event(), 0);
         let (_, responder_1) = assert_connect_event(websocket_event_hub.poll_event(), 1);
         let (_, responder_2) = assert_connect_event(websocket_event_hub.poll_event(), 2);
-        assert_eq!(true, websocket_event_hub.is_empty());
+        assert!(websocket_event_hub.is_empty());
         
         responder_1.send(simple_websockets::Message::Binary(vec![1,2,3]));
         responder_2.send(simple_websockets::Message::Binary(vec![4,5,6]));
