@@ -10,6 +10,8 @@ mod tests {
         const UNIQUE_TEST_PORT: u16 = 9000; // Future fix will eliminate this need
         let server_endpoint = Url::parse(format!("ws://127.0.0.1:{UNIQUE_TEST_PORT}").as_str()).unwrap();
         let websocket_event_hub = simple_websockets::launch(UNIQUE_TEST_PORT).expect(format!("failed to listen on websocket port {UNIQUE_TEST_PORT}").as_str());
+        std::thread::sleep(std::time::Duration::from_millis(500));
+
         assert!(websocket_event_hub.is_empty());
         
         // Connect and disconnect some clients and assert on server events
@@ -49,6 +51,8 @@ mod tests {
         const UNIQUE_TEST_PORT: u16 = 9001; // Future fix will eliminate this need
         let server_endpoint = Url::parse(format!("ws://127.0.0.1:{UNIQUE_TEST_PORT}").as_str()).unwrap();
         let websocket_event_hub = simple_websockets::launch(UNIQUE_TEST_PORT).expect(format!("failed to listen on websocket port {UNIQUE_TEST_PORT}").as_str());
+        std::thread::sleep(std::time::Duration::from_millis(500));
+
         assert!(websocket_event_hub.is_empty());
 
         // Connect some clients and send from the middle one to ensure no bug exists that always returns first or last client id for a received message
@@ -78,6 +82,8 @@ mod tests {
         const UNIQUE_TEST_PORT: u16 = 9002; // Future fix will eliminate this need
         let server_endpoint = Url::parse(format!("ws://127.0.0.1:{UNIQUE_TEST_PORT}").as_str()).unwrap();
         let websocket_event_hub = simple_websockets::launch(UNIQUE_TEST_PORT).expect(format!("failed to listen on websocket port {UNIQUE_TEST_PORT}").as_str());
+        std::thread::sleep(std::time::Duration::from_millis(500));
+
         assert!(websocket_event_hub.is_empty());
 
         // Connect some clients and send from the middle one to ensure no bug exists that always returns first or last client id for a received message
@@ -108,6 +114,8 @@ mod tests {
         const UNIQUE_TEST_PORT: u16 = 9003; // Future fix will eliminate this need
         let server_endpoint = Url::parse(format!("ws://127.0.0.1:{UNIQUE_TEST_PORT}").as_str()).unwrap();
         let websocket_event_hub = simple_websockets::launch(UNIQUE_TEST_PORT).expect(format!("failed to listen on websocket port {UNIQUE_TEST_PORT}").as_str());
+        std::thread::sleep(std::time::Duration::from_millis(500));
+
         assert!(websocket_event_hub.is_empty());
 
         // Connect some clients and send from the middle one to ensure no bug exists that always returns first or last client id for a received message
@@ -140,6 +148,8 @@ mod tests {
         const UNIQUE_TEST_PORT: u16 = 9004; // Future fix will eliminate this need
         let server_endpoint = Url::parse(format!("ws://127.0.0.1:{UNIQUE_TEST_PORT}").as_str()).unwrap();
         let websocket_event_hub = simple_websockets::launch(UNIQUE_TEST_PORT).expect(format!("failed to listen on websocket port {UNIQUE_TEST_PORT}").as_str());
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        
         assert!(websocket_event_hub.is_empty());
 
         // Connect some clients and send from the middle one to ensure no bug exists that always returns first or last client id for a received message
