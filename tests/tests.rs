@@ -1,15 +1,15 @@
 
 #[cfg(test)]
 mod tests {
+    use std::net::{TcpListener, SocketAddr};
+
     use simple_websockets;
     use url::Url;
 
     #[test]
     fn connect_disconnect_test() {
         // Start a server
-        const UNIQUE_TEST_PORT: u16 = 9000; // Future fix will eliminate this need
-        let server_endpoint = Url::parse(format!("ws://127.0.0.1:{UNIQUE_TEST_PORT}").as_str()).unwrap();
-        let websocket_event_hub = simple_websockets::launch(UNIQUE_TEST_PORT).expect(format!("failed to listen on websocket port {UNIQUE_TEST_PORT}").as_str());
+        let (websocket_event_hub, server_endpoint) = start_websocket_and_get_server_endpoint();
         std::thread::sleep(std::time::Duration::from_millis(500));
 
         assert!(websocket_event_hub.is_empty());
@@ -48,9 +48,7 @@ mod tests {
     #[test]
     fn receive_text_message_test() {
         // Start a server
-        const UNIQUE_TEST_PORT: u16 = 9001; // Future fix will eliminate this need
-        let server_endpoint = Url::parse(format!("ws://127.0.0.1:{UNIQUE_TEST_PORT}").as_str()).unwrap();
-        let websocket_event_hub = simple_websockets::launch(UNIQUE_TEST_PORT).expect(format!("failed to listen on websocket port {UNIQUE_TEST_PORT}").as_str());
+        let (websocket_event_hub, server_endpoint) = start_websocket_and_get_server_endpoint();
         std::thread::sleep(std::time::Duration::from_millis(500));
 
         assert!(websocket_event_hub.is_empty());
@@ -79,9 +77,7 @@ mod tests {
     #[test]
     fn receive_binary_message_test() {
         // Start a server
-        const UNIQUE_TEST_PORT: u16 = 9002; // Future fix will eliminate this need
-        let server_endpoint = Url::parse(format!("ws://127.0.0.1:{UNIQUE_TEST_PORT}").as_str()).unwrap();
-        let websocket_event_hub = simple_websockets::launch(UNIQUE_TEST_PORT).expect(format!("failed to listen on websocket port {UNIQUE_TEST_PORT}").as_str());
+        let (websocket_event_hub, server_endpoint) = start_websocket_and_get_server_endpoint();
         std::thread::sleep(std::time::Duration::from_millis(500));
 
         assert!(websocket_event_hub.is_empty());
@@ -111,9 +107,7 @@ mod tests {
     #[test]
     fn send_text_message_test() {
         // Start a server
-        const UNIQUE_TEST_PORT: u16 = 9003; // Future fix will eliminate this need
-        let server_endpoint = Url::parse(format!("ws://127.0.0.1:{UNIQUE_TEST_PORT}").as_str()).unwrap();
-        let websocket_event_hub = simple_websockets::launch(UNIQUE_TEST_PORT).expect(format!("failed to listen on websocket port {UNIQUE_TEST_PORT}").as_str());
+        let (websocket_event_hub, server_endpoint) = start_websocket_and_get_server_endpoint();
         std::thread::sleep(std::time::Duration::from_millis(500));
 
         assert!(websocket_event_hub.is_empty());
@@ -145,9 +139,7 @@ mod tests {
     #[test]
     fn send_binary_message_test() {
         // Start a server
-        const UNIQUE_TEST_PORT: u16 = 9004; // Future fix will eliminate this need
-        let server_endpoint = Url::parse(format!("ws://127.0.0.1:{UNIQUE_TEST_PORT}").as_str()).unwrap();
-        let websocket_event_hub = simple_websockets::launch(UNIQUE_TEST_PORT).expect(format!("failed to listen on websocket port {UNIQUE_TEST_PORT}").as_str());
+        let (websocket_event_hub, server_endpoint) = start_websocket_and_get_server_endpoint();
         std::thread::sleep(std::time::Duration::from_millis(500));
         
         assert!(websocket_event_hub.is_empty());
@@ -186,6 +178,14 @@ mod tests {
         }
     }
 
+    fn start_websocket_and_get_server_endpoint() -> (simple_websockets::EventHub, Url){
+        let listener = TcpListener::bind(format!("0.0.0.0:0")).unwrap();
+        let port = listener.local_addr().unwrap().port();
+        
+        let websocket_event_hub = simple_websockets::launch_from_std_listener(listener).expect(format!("failed to listen on websocket port unspecified port").as_str());
+        let server_endpoint = Url::parse(format!("ws://127.0.0.1:{port}").as_str()).unwrap();
+        return (websocket_event_hub, server_endpoint);
+    }
 
     fn assert_connect_event(e: simple_websockets::Event, expected_client_id: u64) -> (u64, simple_websockets::Responder)
     {
