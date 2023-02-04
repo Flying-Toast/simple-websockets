@@ -1,7 +1,7 @@
 
 #[cfg(test)]
 mod tests {
-    use std::net::{TcpListener, SocketAddr};
+    use std::net::{TcpListener};
 
     use simple_websockets;
     use url::Url;
@@ -55,12 +55,14 @@ mod tests {
 
         // Connect some clients and send from the middle one to ensure no bug exists that always returns first or last client id for a received message
         let (_client_0, _) = tungstenite::connect(&server_endpoint).expect("Can't connect");
-        let (mut client_1, _) = tungstenite::connect(&server_endpoint).expect("Can't connect");
-        let (mut client_2, _) = tungstenite::connect(&server_endpoint).expect("Can't connect");
-        std::thread::sleep(std::time::Duration::from_millis(500));
         assert_connect_event(websocket_event_hub.poll_event(), 0);
+
+        let (mut client_1, _) = tungstenite::connect(&server_endpoint).expect("Can't connect");
         assert_connect_event(websocket_event_hub.poll_event(), 1);
+
+        let (mut client_2, _) = tungstenite::connect(&server_endpoint).expect("Can't connect");
         assert_connect_event(websocket_event_hub.poll_event(), 2);
+
         assert!(websocket_event_hub.is_empty());
         
         client_1.write_message(tungstenite::Message::Text(String::from("Hello from client 1!"))).expect("Error sending text message");
@@ -68,8 +70,9 @@ mod tests {
         assert!(websocket_event_hub.is_empty());
 
         client_1.write_message(tungstenite::Message::Text(String::from("Hello from client 1 again!"))).expect("Error sending text message");
-        client_2.write_message(tungstenite::Message::Text(String::from("Hello from client 2!"))).expect("Error sending text message");
         assert_text_message_event(websocket_event_hub.poll_event(), 1, "Hello from client 1 again!");
+
+        client_2.write_message(tungstenite::Message::Text(String::from("Hello from client 2!"))).expect("Error sending text message");
         assert_text_message_event(websocket_event_hub.poll_event(), 2, "Hello from client 2!");
         assert!(websocket_event_hub.is_empty());
     }
@@ -84,12 +87,15 @@ mod tests {
 
         // Connect some clients and send from the middle one to ensure no bug exists that always returns first or last client id for a received message
         let (_client_0, _) = tungstenite::connect(&server_endpoint).expect("Can't connect");
-        let (mut client_1, _) = tungstenite::connect(&server_endpoint).expect("Can't connect");
-        let (mut client_2, _) = tungstenite::connect(&server_endpoint).expect("Can't connect");
-        std::thread::sleep(std::time::Duration::from_millis(500));
         assert_connect_event(websocket_event_hub.poll_event(), 0);
+
+        let (mut client_1, _) = tungstenite::connect(&server_endpoint).expect("Can't connect");
         assert_connect_event(websocket_event_hub.poll_event(), 1);
+
+        let (mut client_2, _) = tungstenite::connect(&server_endpoint).expect("Can't connect");
         assert_connect_event(websocket_event_hub.poll_event(), 2);
+
+        std::thread::sleep(std::time::Duration::from_millis(500));
         assert!(websocket_event_hub.is_empty());
         
         client_1.write_message(tungstenite::Message::Binary(vec![1, 2, 3])).expect("Error sending text message");
@@ -97,8 +103,9 @@ mod tests {
         assert!(websocket_event_hub.is_empty());
 
         client_1.write_message(tungstenite::Message::Binary(vec![])).expect("Error sending text message");
-        client_2.write_message(tungstenite::Message::Binary(vec![4, 5, 6])).expect("Error sending text message");
         assert_binary_message_event(websocket_event_hub.poll_event(), 1, vec![]);
+
+        client_2.write_message(tungstenite::Message::Binary(vec![4, 5, 6])).expect("Error sending text message");
         assert_binary_message_event(websocket_event_hub.poll_event(), 2, vec![4,5,6]);
         assert!(websocket_event_hub.is_empty());
     }
@@ -114,12 +121,14 @@ mod tests {
 
         // Connect some clients and send from the middle one to ensure no bug exists that always returns first or last client id for a received message
         let (_c0, _r0) = tungstenite::connect(&server_endpoint).expect("Can't connect");
-        let (mut client_1, _r1) = tungstenite::connect(&server_endpoint).expect("Can't connect");
-        let (mut client_2, _r2) = tungstenite::connect(&server_endpoint).expect("Can't connect");
-        std::thread::sleep(std::time::Duration::from_millis(500));
         assert_connect_event(websocket_event_hub.poll_event(), 0);
+
+        let (mut client_1, _r1) = tungstenite::connect(&server_endpoint).expect("Can't connect");
         let (_, responder_1) = assert_connect_event(websocket_event_hub.poll_event(), 1);
+
+        let (mut client_2, _r2) = tungstenite::connect(&server_endpoint).expect("Can't connect");
         let (_, responder_2) = assert_connect_event(websocket_event_hub.poll_event(), 2);
+
         assert!(websocket_event_hub.is_empty());
         
         responder_1.send(simple_websockets::Message::Text("Hello client 1!".to_string()));
@@ -146,12 +155,14 @@ mod tests {
 
         // Connect some clients and send from the middle one to ensure no bug exists that always returns first or last client id for a received message
         let (_c0, _r0) = tungstenite::connect(&server_endpoint).expect("Can't connect");
-        let (mut client_1, _r1) = tungstenite::connect(&server_endpoint).expect("Can't connect");
-        let (mut client_2, _r2) = tungstenite::connect(&server_endpoint).expect("Can't connect");
-        std::thread::sleep(std::time::Duration::from_millis(500));
         assert_connect_event(websocket_event_hub.poll_event(), 0);
+
+        let (mut client_1, _r1) = tungstenite::connect(&server_endpoint).expect("Can't connect");
         let (_, responder_1) = assert_connect_event(websocket_event_hub.poll_event(), 1);
+
+        let (mut client_2, _r2) = tungstenite::connect(&server_endpoint).expect("Can't connect");
         let (_, responder_2) = assert_connect_event(websocket_event_hub.poll_event(), 2);
+        
         assert!(websocket_event_hub.is_empty());
         
         responder_1.send(simple_websockets::Message::Binary(vec![1,2,3]));
