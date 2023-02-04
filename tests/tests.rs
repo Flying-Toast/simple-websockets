@@ -178,6 +178,16 @@ mod tests {
         }
     }
 
+    #[test]
+    fn launch_bind_failed_expect_error_received_test() {
+        // Occupy a random port
+        let listener = TcpListener::bind(format!("0.0.0.0:0")).unwrap();
+        let taken_port = listener.local_addr().unwrap().port();
+
+        // Call launch with the port that we now know is taken - expect an error
+        simple_websockets::launch(taken_port).expect_err("Expected error binding to same port");
+    }
+
     fn start_websocket_and_get_server_endpoint() -> (simple_websockets::EventHub, Url){
         let listener = TcpListener::bind(format!("0.0.0.0:0")).unwrap();
         let port = listener.local_addr().unwrap().port();
