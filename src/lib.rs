@@ -208,28 +208,34 @@ impl EventHub {
 /// On success, returns an [`EventHub`] for receiving messages and
 /// connection/disconnection notifications.
 pub fn launch(port: u16) -> Result<EventHub, Error> {
-    let (tx, rx) = flume::unbounded();
+    let address = format!("0.0.0.0:{}", port);
+    let listener = std::net::TcpListener::bind(&address).map_err(|_| Error::FailedToStart)?;
+    return launch_from_std_listener(listener);
+}
 
+/// Start listening for websocket connections on `port`.
+/// On success, returns an [`EventHub`] for receiving messages and
+/// connection/disconnection notifications.
+pub fn launch_from_std_listener(listener: std::net::TcpListener) -> Result<EventHub, Error> {
+    let (tx, rx) = flume::unbounded();
     std::thread::Builder::new()
         .name("Websocket listener".to_string())
         .spawn(move || {
-            start_runtime(tx, port).unwrap();
+            start_runtime(tx, listener).unwrap();
         }).map_err(|_| Error::FailedToStart)?;
 
     Ok(EventHub::new(rx))
 }
 
-fn start_runtime(event_tx: flume::Sender<Event>, port: u16) -> Result<(), Error> {
+fn start_runtime(event_tx: flume::Sender<Event>, listener: std::net::TcpListener) -> Result<(), Error> {
+    listener.set_nonblocking(true).map_err(|_| Error::FailedToStart)?;
     Runtime::new()
         .map_err(|_| Error::FailedToStart)?
         .block_on(async {
-            let address = format!("0.0.0.0:{}", port);
-            let listener = TcpListener::bind(&address).await
-                .map_err(|_| Error::FailedToStart)?;
-
+            let tokio_listener = TcpListener::from_std(listener).unwrap();
             let mut current_id: u64 = 0;
             loop {
-                match listener.accept().await {
+                match tokio_listener.accept().await {
                     Ok((stream, _)) => {
                         tokio::spawn(handle_connection(stream, event_tx.clone(), current_id));
                         current_id = current_id.wrapping_add(1);
