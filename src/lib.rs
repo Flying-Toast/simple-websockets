@@ -213,7 +213,7 @@ pub fn launch(port: u16) -> Result<EventHub, Error> {
     return launch_from_std_listener(listener);
 }
 
-/// Start listening for websocket connections on `port`.
+/// Start listening for websocket connections with the specified tcp listener.
 /// On success, returns an [`EventHub`] for receiving messages and
 /// connection/disconnection notifications.
 pub fn launch_from_std_listener(listener: std::net::TcpListener) -> Result<EventHub, Error> {
