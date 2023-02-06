@@ -210,13 +210,13 @@ impl EventHub {
 pub fn launch(port: u16) -> Result<EventHub, Error> {
     let address = format!("0.0.0.0:{}", port);
     let listener = std::net::TcpListener::bind(&address).map_err(|_| Error::FailedToStart)?;
-    return launch_from_std_listener(listener);
+    return launch_from_listener(listener);
 }
 
 /// Start listening for websocket connections with the specified tcp listener.
 /// On success, returns an [`EventHub`] for receiving messages and
 /// connection/disconnection notifications.
-pub fn launch_from_std_listener(listener: std::net::TcpListener) -> Result<EventHub, Error> {
+pub fn launch_from_listener(listener: std::net::TcpListener) -> Result<EventHub, Error> {
     let (tx, rx) = flume::unbounded();
     std::thread::Builder::new()
         .name("Websocket listener".to_string())
