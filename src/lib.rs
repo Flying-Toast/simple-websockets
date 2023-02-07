@@ -40,6 +40,16 @@
 //!         }
 //!     }
 //! }
+//! 
+//! 
+//! fn main() {
+//!     // Example of using a pre-bound listener instead of providing a port.
+//!     let listener = TcpListener::bind(format!("0.0.0.0:8080")).unwrap();
+//!     let websocket_event_hub = simple_websockets::launch_from_listener(listener).expect("failed to listen on port 8080");
+//! 
+//!     ...
+//! }
+//! 
 //! ```
 use tokio::runtime::Runtime;
 use tokio::net::{TcpListener, TcpStream};
