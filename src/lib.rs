@@ -40,21 +40,11 @@
 //!         }
 //!     }
 //! }
-//! 
-//! 
-//! fn main() {
-//!     // Example of using a pre-bound listener instead of providing a port.
-//!     let listener = TcpListener::bind(format!("0.0.0.0:8080")).unwrap();
-//!     let event_hub = simple_websockets::launch_from_listener(listener).expect("failed to listen on port 8080");
-//! 
-//!     ...
-//! }
-//! 
 //! ```
-use tokio::runtime::Runtime;
+use futures_util::{SinkExt, StreamExt};
 use tokio::net::{TcpListener, TcpStream};
-use tokio_tungstenite::{tungstenite, accept_async};
-use futures_util::{StreamExt, SinkExt};
+use tokio::runtime::Runtime;
+use tokio_tungstenite::{accept_async, tungstenite};
 
 #[derive(Debug)]
 pub enum Error {
@@ -110,10 +100,7 @@ pub struct Responder {
 
 impl Responder {
     fn new(tx: flume::Sender<ResponderCommand>, client_id: u64) -> Self {
-        Self {
-            tx,
-            client_id,
-        }
+        Self { tx, client_id }
     }
 
     /// Sends a message to the client represented by this `Responder`.
@@ -123,8 +110,7 @@ impl Responder {
     ///
     /// Note that this *doesn't* need a mutable reference to `self`.
     pub fn send(&self, message: Message) -> bool {
-        self.tx.send(ResponderCommand::Message(message))
-            .is_ok()
+        self.tx.send(ResponderCommand::Message(message)).is_ok()
     }
 
     /// Closes this client's connection.
@@ -178,9 +164,7 @@ pub struct EventHub {
 
 impl EventHub {
     fn new(rx: flume::Receiver<Event>) -> Self {
-        Self {
-            rx,
-        }
+        Self { rx }
     }
 
     /// Clears the event queue and returns all the events that were in the queue.
@@ -204,8 +188,7 @@ impl EventHub {
 
     /// Async version of [`poll_event`](Self::poll_event)
     pub async fn poll_async(&self) -> Event {
-        self.rx.recv_async().await
-            .expect("Parent thread is dead")
+        self.rx.recv_async().await.expect("Parent thread is dead")
     }
 
     /// Returns true if there are currently no events in the queue.
@@ -223,22 +206,39 @@ pub fn launch(port: u16) -> Result<EventHub, Error> {
     return launch_from_listener(listener);
 }
 
-/// Start listening for websocket connections with the specified tcp listener.
-/// On success, returns an [`EventHub`] for receiving messages and
-/// connection/disconnection notifications.
+/// Start listening for websocket connections with the specified [`TcpListener`](std::net::TcpListener).
+/// The listener must be bound (by calling [`bind`](std::net::TcpListener::bind)) before being passed to
+/// `launch_from_listener`.
+///
+/// ```no_run
+/// use std::net::TcpListener;
+///
+/// fn main() {
+///     // Example of using a pre-bound listener instead of providing a port.
+///     let listener = TcpListener::bind("0.0.0.0:8080").unwrap();
+///     let event_hub = simple_websockets::launch_from_listener(listener).expect("failed to listen on port 8080");
+///     // ...
+/// }
+/// ```
 pub fn launch_from_listener(listener: std::net::TcpListener) -> Result<EventHub, Error> {
     let (tx, rx) = flume::unbounded();
     std::thread::Builder::new()
         .name("Websocket listener".to_string())
         .spawn(move || {
             start_runtime(tx, listener).unwrap();
-        }).map_err(|_| Error::FailedToStart)?;
+        })
+        .map_err(|_| Error::FailedToStart)?;
 
     Ok(EventHub::new(rx))
 }
 
-fn start_runtime(event_tx: flume::Sender<Event>, listener: std::net::TcpListener) -> Result<(), Error> {
-    listener.set_nonblocking(true).map_err(|_| Error::FailedToStart)?;
+fn start_runtime(
+    event_tx: flume::Sender<Event>,
+    listener: std::net::TcpListener,
+) -> Result<(), Error> {
+    listener
+        .set_nonblocking(true)
+        .map_err(|_| Error::FailedToStart)?;
     Runtime::new()
         .map_err(|_| Error::FailedToStart)?
         .block_on(async {
@@ -249,8 +249,8 @@ fn start_runtime(event_tx: flume::Sender<Event>, listener: std::net::TcpListener
                     Ok((stream, _)) => {
                         tokio::spawn(handle_connection(stream, event_tx.clone(), current_id));
                         current_id = current_id.wrapping_add(1);
-                    },
-                    _ => {},
+                    }
+                    _ => {}
                 }
             }
         })
@@ -267,7 +267,8 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
     // channel for the `Responder` to send things to this websocket
     let (resp_tx, resp_rx) = flume::unbounded();
 
-    event_tx.send(Event::Connect(id, Responder::new(resp_tx, id)))
+    event_tx
+        .send(Event::Connect(id, Responder::new(resp_tx, id)))
         .expect("Parent thread is dead");
 
     // future that waits for commands from the `Responder`
@@ -279,11 +280,11 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
                         let _ = outgoing.close().await;
                         return Ok(());
                     }
-                },
+                }
                 ResponderCommand::CloseConnection => {
                     let _ = outgoing.close().await;
                     return Ok(());
-                },
+                }
             }
         }
 
@@ -300,7 +301,8 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
         while let Some(message) = incoming.next().await {
             if let Ok(tungstenite_msg) = message {
                 if let Some(msg) = Message::from_tungstenite(tungstenite_msg) {
-                    event_tx2.send(Event::Message(id, msg))
+                    event_tx2
+                        .send(Event::Message(id, msg))
                         .expect("Parent thread is dead");
                 }
             }
@@ -316,6 +318,7 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
     // use try_join so that when `events` returns Err (the websocket closes), responder_events will be stopped too
     let _ = futures_util::try_join!(responder_events, events);
 
-    event_tx.send(Event::Disconnect(id))
+    event_tx
+        .send(Event::Disconnect(id))
         .expect("Parent thread is dead");
 }
