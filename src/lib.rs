@@ -53,7 +53,7 @@ pub enum Error {
 }
 
 /// An outgoing/incoming message to/from a websocket.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Message {
     /// A text message
     Text(String),
